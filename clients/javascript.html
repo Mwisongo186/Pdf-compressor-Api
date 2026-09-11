@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LovePDF API - JavaScript Example</title>
+</head>
+<body>
+
+<input type="file" id="pdfFile" accept="application/pdf">
+<input type="number" id="targetKB" value="500" min="1">
+<button id="compressBtn">Compress PDF</button>
+<p id="status"></p>
+
+<script>
+const API_URL = "https://YOUR-RENDER-SERVICE.onrender.com";
+// If API_KEY is empty on Render, leave this empty.
+const API_KEY = "";
+
+document.getElementById("compressBtn").addEventListener("click", async () => {
+    const file = document.getElementById("pdfFile").files[0];
+    const targetKB = Number(document.getElementById("targetKB").value);
+    const status = document.getElementById("status");
+
+    if (!file) {
+        status.textContent = "Select a PDF first.";
+        return;
+    }
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("target_kb", targetKB);
+    form.append("exact_size", "true");
+
+    status.textContent = "Uploading and compressing...";
+
+    try {
+        const headers = {};
+        if (API_KEY) headers["X-API-Key"] = API_KEY;
+
+        const response = await fetch(API_URL + "/compress", {
+            method: "POST",
+            headers,
+            body: form
+        });
+
+        if (!response.ok) {
+            let message = "Compression failed.";
+            try {
+                const data = await response.json();
+                message = data.detail || message;
+            } catch (_) {}
+            throw new Error(message);
+        }
+
+        const blob = await response.blob();
+        const reached = response.headers.get("X-Target-Reached");
+        const compressedBytes = response.headers.get("X-Compressed-Bytes");
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name.replace(/\.pdf$/i, "") + "-compressed.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        status.textContent =
+            "Done. Size: " +
+            (Number(compressedBytes || blob.size) / 1024).toFixed(2) +
+            " KB. Target reached: " + reached;
+    } catch (err) {
+        status.textContent = err.message;
+    }
+});
+</script>
+</body>
+</html>

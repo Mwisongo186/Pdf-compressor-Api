@@ -1,0 +1,17 @@
+# Basic cURL
+curl -X POST "https://YOUR-RENDER-SERVICE.onrender.com/compress" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "target_kb=500" \
+  -F "exact_size=true" \
+  --output compressed.pdf
+
+# With optional API key
+curl -X POST "https://YOUR-RENDER-SERVICE.onrender.com/compress" \
+  -H "X-API-Key: YOUR_SECRET_KEY" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "target_kb=500" \
+  -F "exact_size=true" \
+  --output compressed.pdf
+
+# Health check
+curl "https://YOUR-RENDER-SERVICE.onrender.com/health"
